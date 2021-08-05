@@ -1,0 +1,93 @@
+version: '3.0'
+networks:
+  default:
+    driver: bridge
+    attachable: true
+services:
+  nginx-mac:
+    image: nginx
+    ports:
+      - 80:80
+    logging:
+      driver: splunk
+      options:
+        splunk-url: http://cribl_worker:8088
+        splunk-token: 00000000-0000-0000-0000-000000000000
+        splunk-insecureskipverify: 'false'
+  cribl:
+    image: cribl/cribl:latest
+    ports:
+      - "9000:9000"
+    networks:
+      default:
+        aliases:
+          - cribl_leader
+    volumes:
+      - cribl:/opt/cribl/local
+      - cribl_groups:/opt/cribl/groups
+    container_name: cribl_leader
+    hostname: cribl_leader
+    environment:
+      CRIBL_DIST_MODE: master
+      CRIBL_DIST_MASTER_URL: tcp://cribl_leader@cribl:4200
+  cribl_worker:
+#    image: cribl/cribl:next
+    image: cribl/cribl:latest
+    container_name: cribl_worker
+    hostname: cribl_worker
+    ports:
+      - "9998:9998"
+      - "8088:8088"
+      - "10090:10090"
+      - "1514:1514"
+      - "1514:1514/udp"
+    networks:
+      default:
+        aliases:
+          - cribl_worker
+    environment:
+      CRIBL_DIST_MODE: worker
+      CRIBL_DIST_MASTER_URL: tcp://cribl_leader@cribl:4200
+    deploy:
+        resources:
+            limits:
+              cpus: '3.00'
+              memory: 2048M
+  splunk: 
+    image: splunk/splunk:latest
+    container_name: splunk_server
+    hostname: splunk_server
+    ports:
+      - "8000:8000"
+      - "8089:8089"
+      - "9997:9997"
+    networks:
+      default:
+        aliases:
+          - splunk_server  
+          #splunk_server is the hostname that needs to be specified when sending to Splunk (not localhost)
+    volumes:
+      - splunk-var:/opt/splunk/var
+      - splunk-etc:/opt/splunk/etc
+    container_name: splunk_server
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_PASSWORD=cribl!23
+      - DEBUG=true
+#  appscope:
+#    image: cribl/scope:latest
+#   container_name: appscope
+#    hostname: appscope_host
+#    networks:
+#      default:
+#        aliases:
+#          - appscope_host
+#    container_name: appscope
+volumes:
+  cribl:
+  cribl_groups:
+  splunk-var:
+  splunk-etc:
+
+
+
