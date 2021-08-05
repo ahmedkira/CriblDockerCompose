@@ -1,0 +1,31 @@
+version: '3.0'
+networks:
+  default:
+    driver: bridge
+    attachable: true
+services:
+  cribl_worker:
+    image: cribl/cribl:latest
+    container_name: cribl_worker
+    hostname: cribl_worker
+    ports:
+      - "9998:9998"
+      - "8088:8088"
+      - "10090:10090"
+      - "1514:1514"
+      - "1514:1514/udp"
+    networks:
+      default:
+        aliases:
+          - cribl_worker
+    environment:
+      CRIBL_DIST_MODE: worker
+      CRIBL_DIST_MASTER_URL: tcp://cribl_leader@cribl:4200  ### Update this setting with the IP address and port of your cribl worker
+    deploy:
+        resources:
+            limits:
+              cpus: '3.00'
+              memory: 2048M
+volumes:
+  cribl:
+  cribl_groups:
