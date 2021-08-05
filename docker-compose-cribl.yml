@@ -1,0 +1,61 @@
+version: '3.0'
+networks:
+  default:
+    driver: bridge
+    attachable: true
+services:
+  cribl:
+    #image: cribl/cribl:3.1.0-RC3
+    #image: cribl/cribl:next
+    image: cribl/cribl:latest
+    ports:
+      - "9000:9000"
+    networks:
+      default:
+        aliases:
+          - cribl_leader
+    volumes:
+      - cribl:/opt/cribl/local
+      - cribl_groups:/opt/cribl/groups
+    container_name: cribl_leader
+    hostname: cribl_leader
+    environment:
+      CRIBL_DIST_MODE: master
+      CRIBL_DIST_MASTER_URL: tcp://cribl_leader@cribl:4200
+  cribl_worker:
+    image: cribl/cribl:latest
+    container_name: cribl_worker
+    hostname: cribl_worker
+    ports:
+      - "9998:9998"
+      - "8088:8088"
+      - "10090:10090"
+      - "1514:1514"
+      - "1514:1514/udp"
+    networks:
+      default:
+        aliases:
+          - cribl_worker
+    environment:
+      CRIBL_DIST_MODE: worker
+      CRIBL_DIST_MASTER_URL: tcp://cribl_leader@cribl:4200
+    deploy:
+        resources:
+            limits:
+              cpus: '3.00'
+              memory: 2048M
+#  appscope:
+#    image: cribl/scope:latest
+#   container_name: appscope
+#    hostname: appscope_host
+#    networks:
+#      default:
+#        aliases:
+#          - appscope_host
+#    container_name: appscope
+volumes:
+  cribl:
+  cribl_groups:
+
+
+
