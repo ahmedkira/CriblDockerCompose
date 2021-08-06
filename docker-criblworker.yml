@@ -8,16 +8,21 @@ services:
     image: ${CRIBL_IMAGE:-cribl/cribl:latest}
     environment:
       - CRIBL_DIST_MODE=worker
-      - CRIBL_DIST_MASTER_URL=tcp://criblmaster_secret@master_host:4200 ### Update this setting with the IP address and port of your cribl worker
+      - CRIBL_DIST_MASTER_URL=tcp://criblmaster@34.223.104.100:4200?group=Ahmed ### Update this setting with the IP address and port of your cribl worker
     ports:
       - 9000
-      - "9998:9998"
-      - "8088:8088"
-      - "10090:10090"
-      - "1514:1514"
-      - "1514:1514/udp"
-    deploy:
+      - 9997
+      - 8088
+      - 10090
+      - 1514
+      - 1514/udp
+    deploy:                 ### This section only used when using docker stack command. When using docker-compose up -d, need to use --compatibility option
         resources:
             limits:
               cpus: '3.00'
               memory: 2048M
+              
+  ### Execute through commands similar to the following:
+  ### docker-compose -f docker-compose-workers.yml --compatibility  up -d --scale cribl_workers=2   ## compatability option required for the deploy section to apply
+  ### docker-compose -f docker-compose-workers.yml  up -d --scale cribl_workers=2 ## spin up 2 workers
+  ### docker-compose -f docker-compose-workers.yml  up -d                         ### spin up 1 worker
